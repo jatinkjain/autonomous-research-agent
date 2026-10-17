@@ -13,7 +13,8 @@ def write_report(topic:str, sources:list[dict])-> str:
 
     llm = ChatGroq(
         model="qwen/qwen3.8-27b",
-        temperature=0
+        temperature=0,
+        max_tokens=700
     )
 
     research_material = "\n\n".join(
@@ -37,8 +38,9 @@ def write_report(topic:str, sources:list[dict])-> str:
             "1. exectutive summary\n" \
             "2. key findings\n" \
             "3. analysis \n" \
-            "4. limitations or information gaps\n" \
+            "4. limitations\n" \
             "5. sources"
+            "keep the report under 500 words. include relevant source urls."
         ))
     ]
 
