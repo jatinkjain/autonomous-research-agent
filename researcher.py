@@ -20,11 +20,14 @@ def research_topic(topic :str,instructions:str="") -> list[dict]:
 
     query= f"{topic}. additional research focus: {instructions}"
 
-    response = client.search(
-        query= query,
-        search_depth="advanced" if instructions else "basic",
-        max_results=5
-    )
+    try:
+        response = client.search(
+                query= query,
+                search_depth="advanced" if instructions else "basic",
+                max_results=5
+            )
+    except Exception as e:
+        raise RuntimeError(f"Research search failed: {e}")    
 
 
     sources = []

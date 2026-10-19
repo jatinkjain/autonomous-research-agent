@@ -32,20 +32,27 @@ def validate_report(topic:str, sources:list[dict], report:str) -> dict:
         ))
     ]
 
-    response = llm.invoke(messages)
-
     try:
-        result = json.loads(response.content)
-        if not isinstance(result.get("passed"),bool):
-            raise ValueError("invalid passed field")
-        if not isinstance(result.get("feedback"),str):
-            raise ValueError("invalid feedback field")
+      response = llm.invoke(messages)
 
-        return result 
+      result = json.loads(response.content)
 
-    except (json.JSONDecodeError,ValueError):
-        return {
-            "passed":False,
-            "feedback":"validator returned an invalid response."
-        }    
+      if not isinstance(result.get("passed"), bool):
+        raise ValueError("Invalid passed field")
+
+      if not isinstance(result.get("feedback"), str):
+        raise ValueError("Invalid feedback field")
+
+      return result
+
+    except Exception as e:
+      print("Validator error:", e)
+
+      return {
+        "passed": False,
+        "feedback": "Validation failed due to an LLM or response error."}
+
+    
+
+   
     

@@ -44,8 +44,16 @@ def write_report(topic:str, sources:list[dict])-> str:
         ))
     ]
 
-    response = llm.invoke(message)
+    try:
+        response = llm.invoke(message)
+        return response.content
+    except Exception as e :
+        print(f"writer LLM error {e}")
+        return (
+            "Report generation failed because the LLM request "
+        "could not be completed. Please try again."
+        )
 
-    return response.content
+    
 
 
