@@ -3,6 +3,8 @@ from langgraph.graph import StateGraph,START,END
 from langgraph.checkpoint.sqlite import SqliteSaver
 from pathlib import Path
 from datetime import datetime
+import uuid
+
 
 from researcher import research_topic
 from writer import write_report
@@ -134,49 +136,49 @@ builder.add_conditional_edges("validator",route_after_validation,{
 })
 builder.add_edge("retry","researcher")
 
-with SqliteSaver.from_conn_string(
-    "research_checkpoints.sqlite"
-) as checkpointer:
 
-    research_graph = builder.compile(
-        checkpointer=checkpointer
-    )
+def run_research(topic:str, research_instructions:str=""):
+    if not topic.strip():
+        raise ValueError("Please Enter a Valid Research Topic.")
 
-    topic = input("Enter your research topic: ").strip()
+    with SqliteSaver.from_conn_string(
+    "research_checkpoints.sqlite") as checkpointer:
 
-    if not topic:
-        print("please enter a valid topic.")
+      research_graph = builder.compile(
+        checkpointer=checkpointer)
 
-    else :   
-        config = {
+      config = {
                 "configurable": {
-                    "thread_id": "research-session-002"
+                    "thread_id": str(uuid.uuid4())
                 }
             }
-        
-        snapshot = research_graph.get_state(config)
-        
-        result = research_graph.invoke(
-                {
-                    "topic": topic,
+         
+      initial_state={
+                    "topic": topic.strip(),
                     "sources": [],
                     "report": "",
                     "validation_passed": False,
                     "feedback": "",
                     "retry_count": 0,
-                    "research_instructions": "",
+                    "research_instructions":research_instructions.strip(),
                     "seen_urls": []
-                },
-                config=config
-            )
+                }
+      result = research_graph.invoke(initial_state,config=config)
 
-        print("Final Report: ",result["report"])
+      if result.get("report"):
+          saved_path = save_report(result["topic"],result["report"])
+          print(f"Report Saved {saved_path}")
 
-        if result["report"]:
-          saved_path = save_report(
-          result["topic"],
-          result["report"])
-
-        print(f"\nReport saved to: {saved_path}")
+      return result    
         
-    
+
+
+if __name__=="__main__":
+    topic = input("enter your research topic: ").strip()
+
+    if topic:
+        result = run_research(topic)
+        print("Final report: ",result.get("report",""))
+
+    else:
+        print("please enter valid topic.")
